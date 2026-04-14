@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2026 World Cup Sweepstake Draw</title>
 <style>
+.wheel{border-radius:50%;aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(circle,#ffffff 0%,#dbeafe 70%,#93c5fd 100%);border:6px solid #1d4ed8;transition:transform 0.6s ease;}
+.wheel.spin{transform:rotate(720deg);}
+.copyBtn{background:#16a34a;color:#fff;} 
 body{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;padding:20px}
 .container{max-width:1200px;margin:auto}
 h1{text-align:center;color:#123}
@@ -24,6 +27,7 @@ th,td{padding:10px;border:1px solid #ddd;text-align:left}
 <div class="controls">
 <button id="drawBtn" onclick="drawNext()">Draw Next</button>
 <button id="resetBtn" onclick="resetAll()">Reset</button>
+<button class="copyBtn" onclick="copyResults()">Copy Results</button>
 </div>
 <div class="wheels">
 <div class="wheel"><h3>Player</h3><div class="value" id="playerWheel">—</div></div>
@@ -42,12 +46,18 @@ const potASeed=['Argentina','Spain','France','England','Portugal','Brazil','Neth
 const potBSeed=['Paraguay','Algeria','Egypt','Ghana','Cote d\'Ivoire','Saudi Arabia','Qatar','Tunisia','Turkey','Czech Republic','Scotland','Sweden','South Africa','New Zealand','Panama','Haiti','Curaçao','Cape Verde','Jordan','Uzbekistan','Iraq','Ecuador','DR Congo','Bosnia & Herzegovina'];
 let players=[...initialPlayers], potA=[...potASeed], potB=[...potBSeed], count=0;
 function randomItem(arr){return arr[Math.floor(Math.random()*arr.length)]}
-function spin(id, arr, finalValue, cb){let ticks=0; const el=document.getElementById(id); const int=setInterval(()=>{el.textContent=randomItem(arr); ticks++; if(ticks>15){clearInterval(int); el.textContent=finalValue; cb&&cb();}},100)}
+function playTick(){const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value=800; g.gain.value=0.03; o.start(); o.stop(ctx.currentTime+0.03)}
+function spin(id, arr, finalValue, cb){let ticks=0; const el=document.getElementById(id); const int=setInterval(()=>{el.textContent=randomItem(arr); el.parentElement.classList.add('spin'); playTick(); ticks++;  if(ticks>15){clearInterval(int); el.parentElement.classList.remove('spin'); el.textContent=finalValue; cb&&cb();}},100)}
 function drawNext(){if(!players.length)return; const p=randomItem(players), a=randomItem(potA), b=randomItem(potB);
 spin('playerWheel',players,p,()=>{}); spin('potAWheel',potA,a,()=>{}); spin('potBWheel',potB,b,()=>{
 players=players.filter(x=>x!==p); potA=potA.filter(x=>x!==a); potB=potB.filter(x=>x!==b); count++;
 const row=`<tr><td>${count}</td><td>${p}</td><td>${a}</td><td>${b}</td></tr>`; document.getElementById('resultsBody').insertAdjacentHTML('beforeend',row); document.getElementById('progress').textContent=count;
 });}
+function copyResults(){
+const rows=[...document.querySelectorAll('#resultsBody tr')].map(r=>[...r.children].map(td=>td.innerText).join(' | ')).join('
+');
+navigator.clipboard.writeText(rows); alert('Results copied to clipboard');
+}
 function resetAll(){players=[...initialPlayers]; potA=[...potASeed]; potB=[...potBSeed]; count=0; document.getElementById('resultsBody').innerHTML=''; document.getElementById('progress').textContent='0'; document.getElementById('playerWheel').textContent='—'; document.getElementById('potAWheel').textContent='—'; document.getElementById('potBWheel').textContent='—';}
 </script>
 </body>
